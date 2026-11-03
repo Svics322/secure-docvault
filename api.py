@@ -12,7 +12,7 @@ from utils.hash.password_hasher import PasswordHandler
 from utils.db.db_handler import DatabaseHandler
 import jwt_service
 from utils.sanitizer import sanitize_user_input
-from middleware import SecurityHeadersMiddleware
+from middleware import SecurityMiddleware
 
 load_dotenv()
 
@@ -30,7 +30,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(SecurityMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
