@@ -1,0 +1,20 @@
+﻿<article class="card">
+  <h2>Коментарі до документа</h2>
+  <div class="row">
+    <label class="sr-only" for="comment-doc">Документ</label>
+    <select id="comment-doc" data-ref="commentDocument"></select>
+  </div>
+  <form novalidate data-ref="commentForm">
+    <label for="comment-title">Заголовок</label>
+    <input id="comment-title" data-ref="commentTitle">
+    <ul class="field-errors hidden" role="alert" data-ref="commentTitleErrors"></ul>
+
+    <label for="comment-text">Коментар</label>
+    <textarea id="comment-text" rows="3" data-ref="commentText"></textarea>
+    <ul class="field-errors hidden" role="alert" data-ref="commentTextErrors"></ul>
+
+    <ul class="form-errors hidden" role="alert" data-ref="commentErrors"></ul>
+    <button class="button primary" type="submit">Додати коментар</button>
+  </form>
+  <ul class="comments" data-ref="commentList"></ul>
+</article>

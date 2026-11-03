@@ -1,0 +1,31 @@
+﻿<article class="card upload-card">
+  <div class="card-heading">
+    <h2>Завантаження документа</h2>
+    <p class="card-subtitle">Перетягніть файл у поле або оберіть його на диску.</p>
+  </div>
+
+  <form novalidate data-ref="uploadForm">
+    <div class="dropzone" data-ref="dropZone" role="button" tabindex="0" aria-label="Обрати файл для завантаження">
+      <input id="upload-file" class="dropzone-input" type="file" tabindex="-1"
+             accept=".pdf,.png,.jpg,.jpeg,.gif,.txt,.csv,.md,.docx,.xlsx,.pptx,.zip"
+             data-ref="uploadInput">
+
+      <div class="dropzone-idle" data-ref="dropzoneIdle">
+        <span class="dropzone-title">Перетягніть файл сюди</span>
+        <span class="dropzone-action">Обрати файл</span>
+        <span class="dropzone-hint">PDF, DOCX, зображення, архіви · до 10 МБ</span>
+      </div>
+
+      <div class="dropzone-file hidden" data-ref="dropzoneFile">
+        <span class="file-copy">
+          <span class="file-name" data-ref="fileName"></span>
+          <span class="file-size" data-ref="fileSize"></span>
+        </span>
+        <button class="file-clear" type="button" data-ref="fileClear">Прибрати</button>
+      </div>
+    </div>
+
+    <ul class="form-errors hidden" role="alert" data-ref="uploadErrors"></ul>
+    <button class="button primary" type="submit">Завантажити документ</button>
+  </form>
+</article>

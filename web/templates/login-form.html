@@ -1,0 +1,18 @@
+﻿<form class="tab-panel" novalidate data-ref="loginForm">
+  <label for="login-username">Ім'я користувача</label>
+  <input id="login-username" name="username" autocomplete="username" data-ref="loginUsername">
+  <ul class="field-errors hidden" role="alert" data-ref="loginUsernameErrors"></ul>
+
+  <label for="login-password">Пароль</label>
+  <div class="password-field">
+    <input id="login-password" name="password" type="password" autocomplete="current-password" data-ref="loginPassword">
+    <button class="password-toggle" type="button" data-ref="loginPasswordToggle"
+            aria-label="Показати пароль" aria-pressed="false">
+      <span class="password-toggle-icon" aria-hidden="true"></span>
+    </button>
+  </div>
+  <ul class="field-errors hidden" role="alert" data-ref="loginPasswordErrors"></ul>
+
+  <ul class="form-errors hidden" role="alert" data-ref="loginErrors"></ul>
+  <button class="button primary" type="submit">Увійти</button>
+</form>

@@ -1,0 +1,24 @@
+﻿<form class="tab-panel" novalidate data-ref="registerForm">
+  <label for="register-username">Ім'я користувача</label>
+  <input id="register-username" name="username" autocomplete="username" data-ref="registerUsername">
+  <small>3–30 символів: латиниця, цифри, нижнє підкреслення.</small>
+  <ul class="field-errors hidden" role="alert" data-ref="registerUsernameErrors"></ul>
+
+  <label for="register-email">Email</label>
+  <input id="register-email" name="email" type="email" autocomplete="email" data-ref="registerEmail">
+  <ul class="field-errors hidden" role="alert" data-ref="registerEmailErrors"></ul>
+
+  <label for="register-password">Пароль</label>
+  <div class="password-field">
+    <input id="register-password" name="password" type="password" autocomplete="new-password" data-ref="registerPassword">
+    <button class="password-toggle" type="button" data-ref="registerPasswordToggle"
+            aria-label="Показати пароль" aria-pressed="false">
+      <span class="password-toggle-icon" aria-hidden="true"></span>
+    </button>
+  </div>
+  <small>Мінімум 8 символів, велика й мала літери, цифра, спецсимвол.</small>
+  <ul class="field-errors hidden" role="alert" data-ref="registerPasswordErrors"></ul>
+
+  <ul class="form-errors hidden" role="alert" data-ref="registerErrors"></ul>
+  <button class="button primary" type="submit">Зареєструватися</button>
+</form>

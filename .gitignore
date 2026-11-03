@@ -1,5 +1,19 @@
 venv/
 __pycache__/
 *.pyc
+
+# Секрети та локальна конфігурація
 .env
+.env.lock
+
+# Дані застосунку
 *.db
+*.db-wal
+*.db-shm
+uploads/
+logs/
+
+# Тести та інструменти
+.pytest_cache/
+.coverage
+htmlcov/
