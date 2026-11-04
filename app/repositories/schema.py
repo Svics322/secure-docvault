@@ -96,6 +96,33 @@ def init_schema() -> None:
             );
             """
         )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_signing_keys (
+                user_id INTEGER PRIMARY KEY,
+                public_key_pem TEXT NOT NULL,
+                private_key_encrypted TEXT NOT NULL,
+                key_fingerprint TEXT NOT NULL,
+                algorithm TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+            );
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS document_signatures (
+                document_id TEXT PRIMARY KEY,
+                signer_id INTEGER NOT NULL,
+                algorithm TEXT NOT NULL,
+                signature_b64 TEXT NOT NULL,
+                public_key_fingerprint TEXT NOT NULL,
+                signed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (document_id) REFERENCES documents (id) ON DELETE CASCADE,
+                FOREIGN KEY (signer_id) REFERENCES users (id) ON DELETE CASCADE
+            );
+            """
+        )
 
         _ensure_column(connection, "users", "is_active", "INTEGER NOT NULL DEFAULT 1")
         _ensure_column(
@@ -118,6 +145,10 @@ def init_schema() -> None:
         )
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_revoked_expires ON revoked_tokens(expires_at)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_signatures_signer "
+            "ON document_signatures(signer_id)"
         )
 
         cursor.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")

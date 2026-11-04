@@ -23,3 +23,7 @@ class RefreshRequest(BaseModel):
 class DocumentComment(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     comment: str = Field(min_length=1, max_length=4000)
+
+
+class SigningKeyExport(BaseModel):
+    passphrase: str

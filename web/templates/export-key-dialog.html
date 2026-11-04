@@ -1,0 +1,32 @@
+<div class="confirm-overlay" data-ref="overlay" aria-hidden="true">
+  <div class="confirm-dialog export-dialog" role="dialog" aria-modal="true"
+       aria-labelledby="export-title" aria-describedby="export-message">
+    <h2 class="confirm-title" id="export-title">Експорт приватного ключа</h2>
+    <p class="confirm-message" id="export-message">
+      Приватний ключ буде завантажено у захищеному файлі. Для відкриття
+      знадобиться парольна фраза.
+    </p>
+    <p class="dialog-note">
+      Нікому не передавайте цей файл. Без парольної фрази відновити його неможливо.
+    </p>
+
+    <form class="export-form" novalidate data-ref="form">
+      <label for="export-passphrase">Парольна фраза</label>
+      <div class="password-field">
+        <input id="export-passphrase" type="password" autocomplete="new-password"
+               data-ref="passphrase">
+        <button class="password-toggle" type="button" data-ref="toggle"
+                aria-label="Показати пароль" aria-pressed="false">
+          <span class="password-toggle-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+      <ul class="field-errors hidden" role="alert" data-ref="errors"></ul>
+      <ul class="form-errors hidden" role="alert" data-ref="general"></ul>
+
+      <div class="confirm-actions">
+        <button class="button ghost" type="button" data-ref="cancel">Скасувати</button>
+        <button class="button primary" type="submit" data-ref="submit">Завантажити ключ</button>
+      </div>
+    </form>
+  </div>
+</div>

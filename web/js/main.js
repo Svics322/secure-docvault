@@ -1,15 +1,17 @@
 import { $ } from "./core/dom.js";
 import { api } from "./core/api.js";
-import { downloadFile } from "./core/download.js";
+import { downloadFile, downloadText } from "./core/download.js";
 import { createTopbar } from "./components/topbar.js";
 import { createToast } from "./components/toast.js";
 import { createConfirmDialog } from "./components/confirm-dialog.js";
+import { createExportKeyDialog } from "./components/export-key-dialog.js";
 import { createAuthView } from "./views/auth-view.js";
 import { createVaultView } from "./views/vault-view.js";
 
 let topbar;
 let toast;
 let confirmDialog;
+let exportKeyDialog;
 let authView;
 let vaultView;
 
@@ -23,6 +25,7 @@ function showVault(user) {
   authView.hide();
   vaultView.show(user);
   topbar.showUser(user);
+  refreshSigningKey();
 }
 
 async function loadProfile() {
@@ -68,6 +71,56 @@ async function handleRefresh() {
   }
 }
 
+async function refreshSigningKey() {
+  try {
+    const data = await api("/api/v1/signing/keys");
+    vaultView.signature.update(data.key);
+  } catch (error) {
+    if (error.status !== 401) {
+      toast.show(error.message, "error");
+    }
+  }
+}
+
+async function handleGenerateKey() {
+  vaultView.signature.setBusy(true);
+  try {
+    const data = await api("/api/v1/signing/keys", { method: "POST" });
+    vaultView.signature.update(data.key);
+    toast.show("Ключі ЕЦП створено", "ok");
+  } catch (error) {
+    toast.show(error.message, "error");
+  } finally {
+    vaultView.signature.setBusy(false);
+  }
+}
+
+async function handlePublicKey() {
+  try {
+    const pem = await api("/api/v1/signing/keys/public");
+    downloadText(pem, "docvault-public-key.pem", "application/x-pem-file");
+    toast.show("Публічний ключ завантажено", "ok");
+  } catch (error) {
+    toast.show(error.message, "error");
+  }
+}
+
+async function handleExportKey() {
+  await exportKeyDialog.open({
+    onExport: async (passphrase) => {
+      const pem = await api("/api/v1/signing/keys/export", {
+        method: "POST",
+        body: { passphrase },
+      });
+      downloadText(pem, "docvault-private-key.pem", "application/x-pem-file");
+      toast.show(
+        "Приватний ключ завантажено. Збережіть його в безпечному місці.",
+        "ok"
+      );
+    },
+  });
+}
+
 async function handleLogin({ username, password }) {
   await api("/api/v1/auth/login", {
     method: "POST",
@@ -103,17 +156,22 @@ async function handleUpload(file) {
   }
 
   await api("/api/v1/documents/upload", { method: "POST", body: formData });
-  toast.show("Файл зашифровано та збережено", "ok");
+  toast.show("Файл зашифровано, підписано та збережено", "ok");
   await refreshDocuments();
+  await refreshSigningKey();
 }
 
 async function handleDownload(doc) {
   try {
-    await downloadFile(
+    const result = await downloadFile(
       `/api/v1/documents/${encodeURIComponent(doc.document_id)}/download`,
       doc.original_filename
     );
-    toast.show("Файл розшифровано та завантажено", "ok");
+    if (result.headers.get("X-Signature-Status") === "Signed & Verified") {
+      toast.show("Файл розшифровано. Підпис перевірено.", "ok");
+    } else {
+      toast.show("Файл розшифровано та завантажено", "ok");
+    }
   } catch (error) {
     toast.show(error.message, "error");
   }
@@ -153,10 +211,18 @@ async function handleAddComment({ documentId, title, comment }) {
 }
 
 async function bootstrap() {
-  [topbar, toast, confirmDialog, authView, vaultView] = await Promise.all([
+  [
+    topbar,
+    toast,
+    confirmDialog,
+    exportKeyDialog,
+    authView,
+    vaultView,
+  ] = await Promise.all([
     createTopbar({ onLogout: handleLogout }),
     createToast(),
     createConfirmDialog(),
+    createExportKeyDialog(),
     createAuthView({ onLogin: handleLogin, onRegister: handleRegister }),
     createVaultView({
       onUpload: handleUpload,
@@ -165,12 +231,15 @@ async function bootstrap() {
       onDelete: handleDelete,
       onLoadComments: loadComments,
       onAddComment: handleAddComment,
+      onGenerateKey: handleGenerateKey,
+      onPublicKey: handlePublicKey,
+      onExportKey: handleExportKey,
     }),
   ]);
 
   $("#topbar-host").append(topbar.element);
   $("#toast-host").append(toast.element);
-  $("#dialog-host").append(confirmDialog.element);
+  $("#dialog-host").append(confirmDialog.element, exportKeyDialog.element);
 
   const viewHost = $("#view-host");
   viewHost.append(authView.element, vaultView.element);

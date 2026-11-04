@@ -27,7 +27,23 @@ export async function createDocumentsTable({ onRefresh, onDownload, onDelete }) 
       const row = rowTemplate.cloneNode(true);
       const rowUi = refs(row);
 
+      const signature = doc.signature || {};
+      const isSigned =
+        signature.status === "signed" || signature.status === "verified";
+
       setText(rowUi.docName, doc.original_filename);
+      setText(
+        rowUi.docSignature,
+        isSigned ? "Підписано" : "Без підпису",
+        ""
+      );
+      rowUi.docSignature.classList.toggle("is-signed", isSigned);
+      rowUi.docSignature.classList.toggle("is-unsigned", !isSigned);
+      rowUi.docSignature.title = isSigned
+        ? `${signature.algorithm || "ЕЦП"} · ${
+            signature.signer || "—"
+          } · перевіряється під час скачування`
+        : "Документ без електронного підпису";
       setText(rowUi.docSize, formatSize(doc.size_bytes));
       setText(rowUi.docType, doc.content_type);
       setText(rowUi.docCreated, formatDateTime(doc.created_at));

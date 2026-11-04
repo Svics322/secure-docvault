@@ -1,0 +1,24 @@
+<article class="card signature-card">
+  <div class="card-header">
+    <div>
+      <h2>Цифровий підпис</h2>
+      <p class="card-subtitle">Ключ для підпису документів</p>
+    </div>
+    <span class="signature-state is-missing" data-ref="state">Ключ не створено</span>
+  </div>
+
+  <dl class="kv signature-kv">
+    <dt>Відбиток</dt><dd class="mono" data-ref="fingerprint">—</dd>
+    <dt>Створено</dt><dd data-ref="created">—</dd>
+  </dl>
+
+  <p class="signature-hint" data-ref="hint">
+    Створіть ключі, щоб підписувати завантажені документи.
+  </p>
+
+  <div class="signature-actions">
+    <button class="button primary" type="button" data-ref="generate">Створити ключі</button>
+    <button class="button ghost hidden" type="button" data-ref="publicKey">Публічний ключ</button>
+    <button class="button ghost hidden" type="button" data-ref="exportKey">Експортувати приватний ключ</button>
+  </div>
+</article>

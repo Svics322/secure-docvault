@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 import config as settings
 from app.api.errors import register_exception_handlers
-from app.api.routers import auth, documents, web
+from app.api.routers import auth, documents, signing, web
 from app.lifespan import lifespan
 from app.logging_config import setup_logging
 from app.middleware import SecurityMiddleware
@@ -34,6 +34,7 @@ def create_app() -> FastAPI:
 
     application.include_router(auth.router)
     application.include_router(documents.router)
+    application.include_router(signing.router)
 
     if web.web_client_available():
         application.mount(

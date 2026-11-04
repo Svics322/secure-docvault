@@ -18,6 +18,7 @@ FIELD_LABELS = {
     "title": "Заголовок",
     "comment": "Коментар",
     "file": "Файл",
+    "passphrase": "Парольна фраза",
     "refresh_token": "Refresh-токен",
 }
 

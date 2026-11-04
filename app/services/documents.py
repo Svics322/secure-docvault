@@ -17,7 +17,9 @@ from app.security.filenames import content_disposition, sanitize_filename
 from app.security.file_types import validate_upload
 from app.security.sanitizer import sanitize_multiline, sanitize_user_input
 from app.security.vault import decrypt_from_file, encrypt_to_file, make_aad
+from app.services import signing as signing_service
 from app.services.errors import (
+    AppError,
     BadRequestError,
     ConflictError,
     ForbiddenError,
@@ -46,6 +48,7 @@ def _serialize(document: dict) -> dict:
         "sha256": document.get("sha256"),
         "owner_id": document["owner_id"],
         "created_at": document.get("created_at"),
+        "signature": signing_service.get_signature_info(document["id"]),
     }
 
 
@@ -154,6 +157,23 @@ async def upload(
         destination.unlink(missing_ok=True)
         raise InternalError("Помилка збереження метаданих файлу в БД")
 
+    try:
+        signature = signing_service.sign_content_for_user(
+            raw_content, current_user["user_id"]
+        )
+        signing_service.store_document_signature(
+            doc_id, current_user["user_id"], signature
+        )
+    except AppError:
+        DocumentRepository.delete(doc_id)
+        destination.unlink(missing_ok=True)
+        raise
+    except Exception as exc:
+        DocumentRepository.delete(doc_id)
+        destination.unlink(missing_ok=True)
+        logger.exception("Не вдалося підписати документ %s", doc_id)
+        raise InternalError("Не вдалося створити електронний підпис") from exc
+
     audit(
         "document_uploaded",
         user=current_user["username"],
@@ -169,7 +189,8 @@ async def upload(
         "size_bytes": total,
         "encrypted_size_bytes": encrypted_size,
         "sha256": digest,
-        "message": "Файл успішно зашифровано та збережено в сховищі",
+        "signature": signing_service.get_signature_info(doc_id),
+        "message": "Файл успішно зашифровано, підписано та збережено в сховищі",
     }
 
 
@@ -206,15 +227,38 @@ def download(doc_id: str, current_user: dict) -> DownloadResult:
         logger.error("SHA-256 не збігається для doc=%s", doc_id)
         raise ConflictError("Перевірка цілісності SHA-256 не пройдена.")
 
+    signature = signing_service.verify_document(doc_id, plaintext)
+    if signature["status"] == "invalid":
+        raise ConflictError(
+            "Цифровий підпис документа недійсний: підпис не відповідає "
+            "вмісту або відсутній відкритий ключ підписанта."
+        )
+
+    headers = {
+        "Content-Disposition": content_disposition(document["original_filename"]),
+        "X-Content-SHA256": expected_hash or "",
+        "X-Signature-Status": (
+            "Signed & Verified"
+            if signature["status"] == "verified"
+            else "Unsigned"
+        ),
+    }
+    if signature["status"] == "verified":
+        headers.update(
+            {
+                "X-Signature-Algorithm": signature["algorithm"],
+                "X-Signature-Fingerprint": signature["fingerprint"],
+                "X-Signer": signature.get("signer") or "",
+                "X-Signed-At": signature.get("signed_at") or "",
+            }
+        )
+
     audit("document_downloaded", doc=doc_id, user=current_user["username"])
 
     return DownloadResult(
         content=plaintext,
         media_type=document.get("content_type") or "application/octet-stream",
-        headers={
-            "Content-Disposition": content_disposition(document["original_filename"]),
-            "X-Content-SHA256": expected_hash or "",
-        },
+        headers=headers,
     )
 
 

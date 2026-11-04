@@ -31,11 +31,13 @@ secure-docvault/
 │   │   └── routers/
 │   │       ├── auth.py         # реєстрація, вхід, refresh, logout, профіль
 │   │       ├── documents.py    # документи та коментарі
+│   │       ├── signing.py      # ключі ЕЦП та експорт PKCS#8
 │   │       └── web.py          # віддача вебклієнта
 │   ├── services/
 │   │   ├── auth.py             # сценарії автентифікації
 │   │   ├── tokens.py           # видача/ротація/відкликання токенів
 │   │   ├── documents.py        # сценарії роботи з документами
+│   │   ├── signing.py          # підпис/верифікація документів
 │   │   └── errors.py           # доменні винятки
 │   ├── repositories/
 │   │   ├── database.py         # підключення SQLite + транзакції
@@ -43,11 +45,13 @@ secure-docvault/
 │   │   ├── users.py            # користувачі та lockout
 │   │   ├── documents.py        # метадані документів
 │   │   ├── comments.py         # коментарі
+│   │   ├── signing.py          # ключі підпису та ЕЦП документів
 │   │   └── tokens.py           # blacklist і родини refresh-токенів
 │   ├── security/
 │   │   ├── secrets.py          # атомарна генерація/завантаження ключів
 │   │   ├── passwords.py        # bcrypt, cost=12
 │   │   ├── tokens.py           # JWT: підпис, перевірка, відкликання
+│   │   ├── signatures.py       # RSA-2048, PSS/SHA-256, PKCS#8/X.509
 │   │   ├── vault.py            # AES-256-GCM, контейнер IV|Ciphertext|Tag
 │   │   ├── sanitizer.py        # bleach + видалення керуючих символів
 │   │   ├── filenames.py        # безпечний Content-Disposition (RFC 5987)
@@ -75,13 +79,14 @@ secure-docvault/
 │   └── js/
 │       ├── main.js             # композиція застосунку + сценарії
 │       ├── core/               # api, dom, errors, cookies, format, templates
-│       ├── components/         # topbar, forms, password-toggle, dialog, table, comments
+│       ├── components/         # topbar, forms, passwords, dialogs, signing, table
 │       └── views/              # auth-view, vault-view
 ├── gui/                        # десктопний клієнт (PySide6)
 ├── utils/
 │   └── validators/             # валідація username/email/пароля (спільна з GUI)
-├── tests/                      # pytest (auth, jwt, files, security, crypto)
+├── tests/                      # pytest (auth, jwt, files, security, crypto, signatures)
 ├── test_integrity.py           # демонстрація перевірки цілісності (print-скрипт)
+├── test_signature.py           # демонстрація ЕЦП RSA-PSS (print-скрипт)
 ├── test_stress.py              # демонстрація навантажувального тесту (print-скрипт)
 ├── lab_tests.py                # автоматичні перевірки сценаріїв ЛР №1–4
 ├── requirements.txt
@@ -151,6 +156,10 @@ python -c "import secrets; print(secrets.token_hex(32))"
   `templates`;
 * `web/js/main.js` відповідає за сценарії та зв'язування екранів.
 
+У робочій області є картка «Цифровий підпис» з генерацією ключів, переглядом
+відбитка, скачуванням публічного ключа та модальним експортом приватного ключа
+з парольною фразою. Статус підпису документа показується бейджем у таблиці.
+
 Валідація форм (логін, реєстрація, коментарі, файл) виконується лише на сервері.
 REST API повертає всі помилки одразу, згруповані за полями (`field_errors`) та
 локалізовані українською; клієнт лише показує те, що повернув сервер. Те саме
@@ -174,6 +183,9 @@ REST API повертає всі помилки одразу, згрупован
 | GET | `/api/v1/documents/{id}/download` | Розшифрування та видача |
 | DELETE | `/api/v1/documents/{id}` | Видалення файлу й метаданих |
 | POST/GET | `/api/v1/documents/{id}/comments` | Коментарі до документа |
+| GET/POST | `/api/v1/signing/keys` | Публічний ключ / генерація пари ключів |
+| GET | `/api/v1/signing/keys/public` | Експорт відкритого ключа (X.509 PEM) |
+| POST | `/api/v1/signing/keys/export` | Експорт приватного ключа (PKCS#8 + пароль) |
 
 Сумісні аліаси: `/register`, `/login`, `/logout`.
 
@@ -207,6 +219,14 @@ REST API повертає всі помилки одразу, згрупован
 - ліміти й очищення пам'яті для rate limiter і greylist;
 - `multipart` більше не вважається атакою (boundary `--...`).
 
+**Електронний підпис**
+- RSA-2048, публічна експонента 65537, схема RSA-PSS із SHA-256;
+- приватний ключ зберігається зашифрованим AES-256-GCM (`SIGNING_KEY_ENCRYPTION_KEY`);
+- експорт приватного ключа в PKCS#8 із парольною фразою, відкритого — X.509 PEM;
+- підпис зберігається разом із документом; скачування перевіряє ЕЦП і повертає
+  `X-Signature-Status: Signed & Verified`;
+- недійсний підпис блокує видачу файлу (`409 Conflict`) і пише audit-подію.
+
 **Файли**
 - AES-256-GCM, випадковий 96-бітний nonce на кожну операцію;
 - контейнер `[12B IV] + [Ciphertext] + [16B Tag]`;
@@ -232,6 +252,7 @@ python -m pytest
 
 ```powershell
 python test_integrity.py   # InvalidTag при зміні одного байта
+python test_signature.py   # RSA-PSS: підпис, верифікація, підробка
 python test_stress.py      # 429 + WAF + Greylist
 python lab_tests.py http://127.0.0.1:8000   # сценарії ЛР №1–4
 ```

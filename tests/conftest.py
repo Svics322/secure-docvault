@@ -18,6 +18,7 @@ os.environ.update(
         "DOCVAULT_DATA_DIR": str(TEST_DATA_DIR),
         "JWT_SECRET_KEY": secrets.token_hex(32),
         "FILE_ENCRYPTION_KEY": secrets.token_hex(32),
+        "SIGNING_KEY_ENCRYPTION_KEY": secrets.token_hex(32),
         "COOKIE_SECURE": "false",
         "RATE_LIMIT_ENABLED": "true",
         "WAF_ENABLED": "true",

@@ -361,6 +361,94 @@ tbody tr:hover {
   overflow-wrap: anywhere;
 }
 
+/* Цифровий підпис */
+.signature-card .card-header {
+  align-items: flex-start;
+}
+
+.signature-state {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.signature-state.is-active {
+  color: var(--ok);
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+}
+
+.signature-state.is-missing {
+  color: var(--muted);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.signature-kv {
+  grid-template-columns: 120px 1fr;
+  margin-top: 18px;
+}
+
+.signature-kv .mono {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+}
+
+.signature-hint {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.signature-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.signature-actions .button {
+  margin-top: 0;
+}
+
+.signature-actions .button.primary {
+  width: auto;
+}
+
+.doc-name {
+  display: block;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.signature-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.signature-badge.is-signed {
+  color: #067647;
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+}
+
+.signature-badge.is-unsigned {
+  color: var(--muted);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
 /* Діалог підтвердження */
 body.dialog-open {
   overflow: hidden;
@@ -433,6 +521,33 @@ body.dialog-open {
 .confirm-actions .button:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+.confirm-actions .button.primary {
+  width: auto;
+}
+
+.export-dialog {
+  width: min(460px, 100%);
+}
+
+.export-form label {
+  margin-top: 18px;
+}
+
+.export-form .confirm-actions {
+  margin-top: 20px;
+}
+
+.dialog-note {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #fedf89;
+  border-radius: var(--radius-sm);
+  background: #fffaeb;
+  color: #93370d;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
 .button.danger-solid {
